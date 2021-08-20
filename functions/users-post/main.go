@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/ferjmc/cms/entities"
 	"github.com/ferjmc/cms/functions"
+	"github.com/ferjmc/cms/pkg/auth"
 	"github.com/ferjmc/cms/pkg/user"
 )
 
@@ -57,7 +58,7 @@ func Handle(input events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse
 		return functions.NewErrorResponse(err)
 	}
 
-	token, err := entities.GenerateToken(newUser.Username)
+	token, err := auth.New().GenerateToken(newUser.Username)
 	if err != nil {
 		return functions.NewErrorResponse(err)
 	}
