@@ -48,12 +48,11 @@ func Handle(input events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse
 	service := user.NewUserService(repo)
 
 	newUser := entities.User{
-		Username:     request.User.Username,
-		Email:        request.User.Email,
-		PasswordHash: []byte(request.User.Password),
+		Username: request.User.Username,
+		Email:    request.User.Email,
 	}
 
-	err = service.PutUser(newUser)
+	err = service.PutUser(newUser, request.User.Password)
 	if err != nil {
 		return functions.NewErrorResponse(err)
 	}

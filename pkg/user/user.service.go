@@ -1,9 +1,12 @@
 package user
 
-import "github.com/ferjmc/cms/entities"
+import (
+	"github.com/ferjmc/cms/entities"
+	"github.com/ferjmc/cms/pkg/auth"
+)
 
 type UserService interface {
-	PutUser(user entities.User) error
+	PutUser(user entities.User, password string) error
 }
 
 func NewUserService(r UserRepository) UserService {
@@ -16,8 +19,15 @@ type userService struct {
 	repository UserRepository
 }
 
-func (s *userService) PutUser(user entities.User) error {
-	err := user.Validate()
+func (s *userService) PutUser(user entities.User, password string) error {
+	passHash, err := auth.New().Scrypt(password)
+	if err != nil {
+		return err
+	}
+
+	user.PasswordHash = passHash
+
+	err = user.Validate()
 	if err != nil {
 		return err
 	}
