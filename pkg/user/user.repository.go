@@ -14,6 +14,7 @@ type UserRepository interface {
 	PutUser(user entities.User) error
 	UserByUsername(username string) (*entities.User, error)
 	UsernameByEmail(email string) (string, error)
+	UpdateUser(oldUser, newUser entities.User) error
 }
 
 func NewUserRepository(instance int) (UserRepository, error) {
