@@ -35,13 +35,8 @@ type UserResponse struct {
 }
 
 func Handle(input events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-	repo, err := user.NewUserRepository(user.InstanceDynamodb)
-	if err != nil {
-		return functions.NewErrorResponse(err)
-	}
-
 	var request Request
-	err = json.Unmarshal([]byte(input.Body), &request)
+	err := json.Unmarshal([]byte(input.Body), &request)
 	if err != nil {
 		return functions.NewErrorResponse(err)
 	}
@@ -58,7 +53,7 @@ func Handle(input events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse
 		Bio:          request.User.Bio,
 	}
 
-	userService := user.NewUserService(repo)
+	userService := user.New()
 	user, token, err := userService.UpdateUser(input.Headers["Authorization"], newUser)
 	if err != nil {
 		return functions.NewErrorResponse(err)

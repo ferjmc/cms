@@ -6,7 +6,9 @@ import (
 )
 
 type UserService interface {
+	// PutUser creates a new user from basic struct and a password string
 	PutUser(user entities.User, password string) error
+	// GetUserBuUsername retrieves a user object from a username string
 	GetUserByUsername(username string) (*entities.User, error)
 	GetUsernameByEmail(email string) (string, error)
 	GetUserByEmail(email string) (*entities.User, error)
@@ -18,6 +20,26 @@ func NewUserService(r UserRepository) UserService {
 	return &userService{
 		repository: r,
 	}
+}
+
+func New(opts ...func(UserService) UserService) UserService {
+	var serv UserService
+	for _, opt := range opts {
+		serv = opt(serv)
+	}
+	// whitout opts retrieves service with dynamo by default
+	if len(opts) <= 0 {
+		return WithDynamoDB(serv)
+	}
+	return serv
+}
+
+func WithDynamoDB(serv UserService) UserService {
+	repo, err := NewUserRepository(InstanceDynamodb)
+	if err != nil {
+		return serv
+	}
+	return NewUserService(repo)
 }
 
 type userService struct {

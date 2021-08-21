@@ -21,11 +21,7 @@ type UserResponse struct {
 
 func Handle(input events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 
-	repo, err := user.NewUserRepository(user.InstanceDynamodb)
-	if err != nil {
-		return functions.NewErrorResponse(err)
-	}
-	userService := user.NewUserService(repo)
+	userService := user.New()
 	user, token, err := userService.GetCurrentUser(input.Headers["Authorization"])
 	if err != nil {
 		return functions.NewErrorResponse(err)
