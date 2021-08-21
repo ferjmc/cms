@@ -7,6 +7,7 @@ import (
 
 type UserService interface {
 	PutUser(user entities.User, password string) error
+	GetUserByUsername(username string) (*entities.User, error)
 }
 
 func NewUserService(r UserRepository) UserService {
@@ -38,4 +39,11 @@ func (s *userService) PutUser(user entities.User, password string) error {
 	}
 
 	return s.repository.PutUser(user)
+}
+
+func (s *userService) GetUserByUsername(username string) (*entities.User, error) {
+	if len(username) <= 0 {
+		return nil, entities.NewInputError("username", "username can't be blank")
+	}
+	return nil, nil
 }

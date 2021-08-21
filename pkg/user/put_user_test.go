@@ -32,3 +32,15 @@ func TestPutUser(t *testing.T) {
 		}
 	})
 }
+
+func TestGetUserByUsername(t *testing.T) {
+	repo := NewMockUserRepository()
+	serv := NewUserService(repo)
+
+	t.Run("It must return error if username is empty", func(t *testing.T) {
+		_, err := serv.GetUserByUsername("")
+		if err == nil {
+			t.Error("error is nil while username is blank")
+		}
+	})
+}
