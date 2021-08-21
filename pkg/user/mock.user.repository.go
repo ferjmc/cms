@@ -18,6 +18,10 @@ func (m *mockUserRepository) UsernameByEmail(email string) (string, error) {
 	return "", nil
 }
 
+func (m *mockUserRepository) UpdateUser(oldUser, newUser entities.User) error {
+	return nil
+}
+
 func NewMockUserRepository() UserRepository {
 	return &mockUserRepository{}
 }

@@ -10,6 +10,8 @@ type UserService interface {
 	GetUserByUsername(username string) (*entities.User, error)
 	GetUsernameByEmail(email string) (string, error)
 	GetUserByEmail(email string) (*entities.User, error)
+	GetCurrentUser(authorization string) (*entities.User, string, error)
+	UpdateUser(authorization string, newUser entities.User) (*entities.User, string, error)
 }
 
 func NewUserService(r UserRepository) UserService {
@@ -60,4 +62,36 @@ func (s *userService) GetUserByEmail(email string) (*entities.User, error) {
 		return nil, err
 	}
 	return s.repository.UserByUsername(username)
+}
+
+func (s *userService) GetCurrentUser(authorization string) (*entities.User, string, error) {
+	authService := auth.New()
+	username, token, err := authService.VerifyAuthorization(authorization)
+	if err != nil {
+		return nil, "", err
+	}
+	user, err := s.GetUserByUsername(username)
+	if err != nil {
+		return nil, "", err
+	}
+	return user, token, nil
+}
+
+func (s *userService) UpdateUser(authorization string, newUser entities.User) (*entities.User, string, error) {
+	err := newUser.Validate()
+	if err != nil {
+		return nil, "", err
+	}
+
+	oldUser, token, err := s.GetCurrentUser(authorization)
+	if err != nil {
+		return nil, "", err
+	}
+
+	err = s.repository.UpdateUser(*oldUser, newUser)
+	if err != nil {
+		return nil, "", err
+	}
+
+	return &newUser, token, nil
 }

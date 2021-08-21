@@ -88,3 +88,61 @@ func (d *dynamoRepository) UsernameByEmail(email string) (string, error) {
 
 	return emailUser.Username, nil
 }
+
+func (d *dynamoRepository) UpdateUser(oldUser, newUser entities.User) error {
+	transactItems := make([]*dynamodb.TransactWriteItem, 0, 3)
+
+	if oldUser.Email != newUser.Email {
+		newEmailUser := entities.EmailUser{
+			Email:    newUser.Email,
+			Username: newUser.Username,
+		}
+
+		newEmailUserItem, err := dynamodbattribute.MarshalMap(newEmailUser)
+		if err != nil {
+			return err
+		}
+
+		// Link user with the new email
+		transactItems = append(transactItems, &dynamodb.TransactWriteItem{
+			Put: &dynamodb.Put{
+				TableName:           aws.String(dynamo.EmailUserTableName),
+				Item:                newEmailUserItem,
+				ConditionExpression: aws.String("attribute_not_exists(Email)"),
+			},
+		})
+
+		// Unlink user from the old email
+		transactItems = append(transactItems, &dynamodb.TransactWriteItem{
+			Delete: &dynamodb.Delete{
+				TableName:           aws.String(dynamo.EmailUserTableName),
+				Key:                 dynamo.StringKey("Email", oldUser.Email),
+				ConditionExpression: aws.String("attribute_exists(Email)"),
+			},
+		})
+	}
+
+	newUserItem, err := dynamodbattribute.MarshalMap(newUser)
+	if err != nil {
+		return err
+	}
+
+	// Update user info
+	transactItems = append(transactItems, &dynamodb.TransactWriteItem{
+		Put: &dynamodb.Put{
+			TableName:                 aws.String(dynamo.UserTableName),
+			Item:                      newUserItem,
+			ConditionExpression:       aws.String("Email = :email"),
+			ExpressionAttributeValues: dynamo.StringKey(":email", oldUser.Email),
+		},
+	})
+
+	_, err = dynamo.DynamoDB().TransactWriteItems(&dynamodb.TransactWriteItemsInput{
+		TransactItems: transactItems,
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
