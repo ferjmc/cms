@@ -37,6 +37,16 @@ func TestGetUserByUsername(t *testing.T) {
 	repo := NewMockUserRepository()
 	serv := NewUserService(repo)
 
+	t.Run("Given username string retrieve user object with same username atribute", func(t *testing.T) {
+		username := "username"
+		user, err := serv.GetUserByUsername(username)
+		if err != nil {
+			t.Error("if repository found the username it can't return an error")
+		}
+		if username != user.Username {
+			t.Errorf("given username: %s, user.username: %s are not equal", username, user.Username)
+		}
+	})
 	t.Run("It must return error if username is empty", func(t *testing.T) {
 		_, err := serv.GetUserByUsername("")
 		if err == nil {

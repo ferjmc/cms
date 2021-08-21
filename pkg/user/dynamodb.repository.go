@@ -60,3 +60,31 @@ func (d *dynamoRepository) PutUser(user entities.User) error {
 
 	return nil
 }
+
+func (d *dynamoRepository) UserByUsername(username string) (*entities.User, error) {
+	var user entities.User
+	found, err := dynamo.GetItemByKey(dynamo.UserTableName, dynamo.StringKey("Username", username), &user)
+	if err != nil {
+		return nil, err
+	}
+	if !found {
+		return nil, entities.NewInputError("username", "not found")
+	}
+
+	return &user, nil
+}
+
+func (d *dynamoRepository) UsernameByEmail(email string) (string, error) {
+	var emailUser entities.EmailUser
+	found, err := dynamo.GetItemByKey(dynamo.EmailUserTableName, dynamo.StringKey("Email", email), &emailUser)
+
+	if err != nil {
+		return "", err
+	}
+
+	if !found {
+		return "", entities.NewInputError("email", "not found")
+	}
+
+	return emailUser.Username, nil
+}

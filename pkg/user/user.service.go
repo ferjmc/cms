@@ -8,6 +8,8 @@ import (
 type UserService interface {
 	PutUser(user entities.User, password string) error
 	GetUserByUsername(username string) (*entities.User, error)
+	GetUsernameByEmail(email string) (string, error)
+	GetUserByEmail(email string) (*entities.User, error)
 }
 
 func NewUserService(r UserRepository) UserService {
@@ -45,5 +47,17 @@ func (s *userService) GetUserByUsername(username string) (*entities.User, error)
 	if len(username) <= 0 {
 		return nil, entities.NewInputError("username", "username can't be blank")
 	}
-	return nil, nil
+	return s.repository.UserByUsername(username)
+}
+
+func (s *userService) GetUsernameByEmail(email string) (string, error) {
+	return s.repository.UsernameByEmail(email)
+}
+
+func (s *userService) GetUserByEmail(email string) (*entities.User, error) {
+	username, err := s.repository.UsernameByEmail(email)
+	if err != nil {
+		return nil, err
+	}
+	return s.repository.UserByUsername(username)
 }

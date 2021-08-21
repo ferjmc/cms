@@ -107,6 +107,12 @@
               "LogGroupName": "/aws/lambda/cms-dev-users-post"
             }
           },
+          "UsersDashloginDashpostLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+              "LogGroupName": "/aws/lambda/cms-dev-users-login-post"
+            }
+          },
           "IamRoleLambdaExecution": {
             "Type": "AWS::IAM::Role",
             "Properties": {
@@ -194,7 +200,7 @@
                 "S3Bucket": {
                   "Ref": "ServerlessDeploymentBucket"
                 },
-                "S3Key": "serverless/cms/dev/1629505393660-2021-08-21T00:23:13.660Z/cms.zip"
+                "S3Key": "serverless/cms/dev/1629528895100-2021-08-21T06:54:55.100Z/cms.zip"
               },
               "Handler": "bin/users-post",
               "Runtime": "go1.x",
@@ -217,14 +223,54 @@
               "UsersDashpostLogGroup"
             ]
           },
-          "UsersDashpostLambdaVersionVQnG5o7urD6Aqqb9V34yx0FwTLBhA4XpPFVi8dyl9k": {
+          "UsersDashloginDashpostLambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+              "Code": {
+                "S3Bucket": {
+                  "Ref": "ServerlessDeploymentBucket"
+                },
+                "S3Key": "serverless/cms/dev/1629528895100-2021-08-21T06:54:55.100Z/cms.zip"
+              },
+              "Handler": "bin/users-login-post",
+              "Runtime": "go1.x",
+              "FunctionName": "cms-dev-users-login-post",
+              "MemorySize": 1024,
+              "Timeout": 6,
+              "Environment": {
+                "Variables": {
+                  "STAGE": "dev"
+                }
+              },
+              "Role": {
+                "Fn::GetAtt": [
+                  "IamRoleLambdaExecution",
+                  "Arn"
+                ]
+              }
+            },
+            "DependsOn": [
+              "UsersDashloginDashpostLogGroup"
+            ]
+          },
+          "UsersDashpostLambdaVersionYHfuCyXPRctgSm4MsGAUsZYArvHicUJZ7qxehbXwtw": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
               "FunctionName": {
                 "Ref": "UsersDashpostLambdaFunction"
               },
-              "CodeSha256": "sws1aRhQjjmmKP7Un6mTBWq1U5FLEzj1HROMxMziO3Y="
+              "CodeSha256": "zECOB9F0ov84FUwvKwbmvUtBt+yhqh+DiqPaiSHAdoE="
+            }
+          },
+          "UsersDashloginDashpostLambdaVersionprGGmNlBuGHoQgK23yjNX5R276Ak9cH5eTS0nLWYWr0": {
+            "Type": "AWS::Lambda::Version",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+              "FunctionName": {
+                "Ref": "UsersDashloginDashpostLambdaFunction"
+              },
+              "CodeSha256": "zECOB9F0ov84FUwvKwbmvUtBt+yhqh+DiqPaiSHAdoE="
             }
           },
           "ApiGatewayRestApi": {
@@ -249,6 +295,18 @@
                 ]
               },
               "PathPart": "users",
+              "RestApiId": {
+                "Ref": "ApiGatewayRestApi"
+              }
+            }
+          },
+          "ApiGatewayResourceUsersLogin": {
+            "Type": "AWS::ApiGateway::Resource",
+            "Properties": {
+              "ParentId": {
+                "Ref": "ApiGatewayResourceUsers"
+              },
+              "PathPart": "login",
               "RestApiId": {
                 "Ref": "ApiGatewayRestApi"
               }
@@ -293,6 +351,51 @@
               },
               "ResourceId": {
                 "Ref": "ApiGatewayResourceUsers"
+              },
+              "RestApiId": {
+                "Ref": "ApiGatewayRestApi"
+              }
+            }
+          },
+          "ApiGatewayMethodUsersLoginOptions": {
+            "Type": "AWS::ApiGateway::Method",
+            "Properties": {
+              "AuthorizationType": "NONE",
+              "HttpMethod": "OPTIONS",
+              "MethodResponses": [
+                {
+                  "StatusCode": "200",
+                  "ResponseParameters": {
+                    "method.response.header.Access-Control-Allow-Origin": true,
+                    "method.response.header.Access-Control-Allow-Headers": true,
+                    "method.response.header.Access-Control-Allow-Methods": true
+                  },
+                  "ResponseModels": {}
+                }
+              ],
+              "RequestParameters": {},
+              "Integration": {
+                "Type": "MOCK",
+                "RequestTemplates": {
+                  "application/json": "{statusCode:200}"
+                },
+                "ContentHandling": "CONVERT_TO_TEXT",
+                "IntegrationResponses": [
+                  {
+                    "StatusCode": "200",
+                    "ResponseParameters": {
+                      "method.response.header.Access-Control-Allow-Origin": "'*'",
+                      "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
+                      "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,POST'"
+                    },
+                    "ResponseTemplates": {
+                      "application/json": "#set($origin = $input.params(\"Origin\"))\n#if($origin == \"\") #set($origin = $input.params(\"origin\")) #end\n#if($origin.matches(\".+\")) #set($context.responseOverride.header.Access-Control-Allow-Origin = $origin) #end"
+                    }
+                  }
+                ]
+              },
+              "ResourceId": {
+                "Ref": "ApiGatewayResourceUsersLogin"
               },
               "RestApiId": {
                 "Ref": "ApiGatewayRestApi"
@@ -345,7 +448,53 @@
               "UsersDashpostLambdaPermissionApiGateway"
             ]
           },
-          "ApiGatewayDeployment1629505392010": {
+          "ApiGatewayMethodUsersLoginPost": {
+            "Type": "AWS::ApiGateway::Method",
+            "Properties": {
+              "HttpMethod": "POST",
+              "RequestParameters": {},
+              "ResourceId": {
+                "Ref": "ApiGatewayResourceUsersLogin"
+              },
+              "RestApiId": {
+                "Ref": "ApiGatewayRestApi"
+              },
+              "ApiKeyRequired": false,
+              "AuthorizationType": "NONE",
+              "Integration": {
+                "IntegrationHttpMethod": "POST",
+                "Type": "AWS_PROXY",
+                "Uri": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":apigateway:",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      ":lambda:path/2015-03-31/functions/",
+                      {
+                        "Fn::GetAtt": [
+                          "UsersDashloginDashpostLambdaFunction",
+                          "Arn"
+                        ]
+                      },
+                      "/invocations"
+                    ]
+                  ]
+                }
+              },
+              "MethodResponses": []
+            },
+            "DependsOn": [
+              "UsersDashloginDashpostLambdaPermissionApiGateway"
+            ]
+          },
+          "ApiGatewayDeployment1629528891979": {
             "Type": "AWS::ApiGateway::Deployment",
             "Properties": {
               "RestApiId": {
@@ -355,7 +504,9 @@
             },
             "DependsOn": [
               "ApiGatewayMethodUsersOptions",
-              "ApiGatewayMethodUsersPost"
+              "ApiGatewayMethodUsersLoginOptions",
+              "ApiGatewayMethodUsersPost",
+              "ApiGatewayMethodUsersLoginPost"
             ]
           },
           "UsersDashpostLambdaPermissionApiGateway": {
@@ -364,6 +515,43 @@
               "FunctionName": {
                 "Fn::GetAtt": [
                   "UsersDashpostLambdaFunction",
+                  "Arn"
+                ]
+              },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "apigateway.amazonaws.com",
+              "SourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition"
+                    },
+                    ":execute-api:",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId"
+                    },
+                    ":",
+                    {
+                      "Ref": "ApiGatewayRestApi"
+                    },
+                    "/*/*"
+                  ]
+                ]
+              }
+            }
+          },
+          "UsersDashloginDashpostLambdaPermissionApiGateway": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": {
+                "Fn::GetAtt": [
+                  "UsersDashloginDashpostLambdaFunction",
                   "Arn"
                 ]
               },
@@ -454,10 +642,19 @@
           "UsersDashpostLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "UsersDashpostLambdaVersionVQnG5o7urD6Aqqb9V34yx0FwTLBhA4XpPFVi8dyl9k"
+              "Ref": "UsersDashpostLambdaVersionYHfuCyXPRctgSm4MsGAUsZYArvHicUJZ7qxehbXwtw"
             },
             "Export": {
               "Name": "sls-cms-dev-UsersDashpostLambdaFunctionQualifiedArn"
+            }
+          },
+          "UsersDashloginDashpostLambdaFunctionQualifiedArn": {
+            "Description": "Current Lambda function version",
+            "Value": {
+              "Ref": "UsersDashloginDashpostLambdaVersionprGGmNlBuGHoQgK23yjNX5R276Ak9cH5eTS0nLWYWr0"
+            },
+            "Export": {
+              "Name": "sls-cms-dev-UsersDashloginDashpostLambdaFunctionQualifiedArn"
             }
           },
           "ServiceEndpoint": {
@@ -610,7 +807,45 @@
         "timeout": 6,
         "runtime": "go1.x",
         "vpc": {},
-        "versionLogicalId": "UsersDashpostLambdaVersionVQnG5o7urD6Aqqb9V34yx0FwTLBhA4XpPFVi8dyl9k"
+        "versionLogicalId": "UsersDashpostLambdaVersionYHfuCyXPRctgSm4MsGAUsZYArvHicUJZ7qxehbXwtw"
+      },
+      "users-login-post": {
+        "handler": "bin/users-login-post",
+        "events": [
+          {
+            "http": {
+              "path": "users/login",
+              "method": "post",
+              "cors": {
+                "origins": [
+                  "*"
+                ],
+                "origin": "*",
+                "methods": [
+                  "OPTIONS",
+                  "POST"
+                ],
+                "headers": [
+                  "Content-Type",
+                  "X-Amz-Date",
+                  "Authorization",
+                  "X-Api-Key",
+                  "X-Amz-Security-Token",
+                  "X-Amz-User-Agent"
+                ],
+                "allowCredentials": false
+              },
+              "integration": "AWS_PROXY"
+            }
+          }
+        ],
+        "name": "cms-dev-users-login-post",
+        "package": {},
+        "memory": 1024,
+        "timeout": 6,
+        "runtime": "go1.x",
+        "vpc": {},
+        "versionLogicalId": "UsersDashloginDashpostLambdaVersionprGGmNlBuGHoQgK23yjNX5R276Ak9cH5eTS0nLWYWr0"
       }
     },
     "resources": {
@@ -680,7 +915,7 @@
           "./bin/**"
         ],
         "artifact": "C:\\Users\\Federico\\go\\src\\github.com\\ferjmc\\cms\\.serverless\\cms.zip",
-        "artifactDirectoryName": "serverless/cms/dev/1629505393660-2021-08-21T00:23:13.660Z"
+        "artifactDirectoryName": "serverless/cms/dev/1629528895100-2021-08-21T06:54:55.100Z"
       },
       "functions": {
         "$ref": "$[\"service\"][\"functions\"]"
@@ -694,7 +929,7 @@
     "artifact": "C:\\Users\\Federico\\go\\src\\github.com\\ferjmc\\cms\\.serverless\\cms.zip"
   },
   "package": {
-    "artifactDirectoryName": "serverless/cms/dev/1629505393660-2021-08-21T00:23:13.660Z",
+    "artifactDirectoryName": "serverless/cms/dev/1629528895100-2021-08-21T06:54:55.100Z",
     "artifact": "cms.zip"
   }
 }
