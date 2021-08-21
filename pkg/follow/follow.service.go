@@ -3,7 +3,10 @@ package follow
 import "github.com/ferjmc/cms/entities"
 
 type FollowService interface {
+	// IsFollowing given a user and a list of publishers, retrieves a list
+	// with a flag in true for each publisher if the user is following his posts
 	IsFollowing(follower *entities.User, publishers []string) ([]bool, error)
+	Follow(follower, publisher string) error
 }
 
 func NewFollowService(r FollowRepository) FollowService {
@@ -37,5 +40,16 @@ type followService struct {
 }
 
 func (s *followService) IsFollowing(follower *entities.User, publishers []string) ([]bool, error) {
+	if follower == nil || len(publishers) == 0 {
+		return make([]bool, len(publishers)), nil
+	}
 	return s.repository.IsFollowing(follower, publishers)
+}
+
+func (s *followService) Follow(follower, publisher string) error {
+	follow := entities.Follow{
+		Follower:  follower,
+		Publisher: publisher,
+	}
+	return s.repository.Follow(follow)
 }

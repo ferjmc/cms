@@ -12,6 +12,7 @@ const (
 
 type FollowRepository interface {
 	IsFollowing(follower *entities.User, publishers []string) ([]bool, error)
+	Follow(follow entities.Follow) error
 }
 
 func NewFollowRepository(instance int) (FollowRepository, error) {

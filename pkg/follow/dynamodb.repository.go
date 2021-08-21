@@ -60,3 +60,19 @@ func (d *dynamoRepository) IsFollowing(follower *entities.User, publishers []str
 
 	return following, nil
 }
+
+func (d *dynamoRepository) Follow(follow entities.Follow) error {
+	item, err := dynamodbattribute.MarshalMap(follow)
+	if err != nil {
+		return err
+	}
+
+	putFollow := dynamodb.PutItemInput{
+		TableName: aws.String(dynamo.FollowTableName),
+		Item:      item,
+	}
+
+	_, err = dynamo.DynamoDB().PutItem(&putFollow)
+
+	return err
+}
