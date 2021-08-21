@@ -20,6 +20,11 @@ type userService struct {
 }
 
 func (s *userService) PutUser(user entities.User, password string) error {
+	err := entities.ValidatePassword(password)
+	if err != nil {
+		return err
+	}
+
 	passHash, err := auth.New().Scrypt(password)
 	if err != nil {
 		return err

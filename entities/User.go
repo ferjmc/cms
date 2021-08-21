@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-const MinPasswordLength = 0
+const MinPasswordLength = 6
 const PasswordKeyLength = 64
 
 type User struct {
