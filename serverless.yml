@@ -54,8 +54,8 @@ provider:
 #            - "/*"
 
 # you can define service wide environment variables here
-#  environment:
-#    variable1: value1
+  environment:
+    STAGE: dev
 
 package:
   patterns:
@@ -128,6 +128,22 @@ resources:
         ProvisionedThroughput:
           ReadCapacityUnits: 2
           WriteCapacityUnits: 2
+    
+    EmailUserTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: cms-dev-email-user
+        AttributeDefinitions:
+          - AttributeName: Email
+            AttributeType: S
+        KeySchema:  # POST /users/login
+          - AttributeName: Email
+            KeyType: HASH
+        BillingMode: PROVISIONED
+        ProvisionedThroughput:
+          ReadCapacityUnits: 2
+          WriteCapacityUnits: 2
+
 #    NewResource:
 #      Type: AWS::S3::Bucket
 #      Properties:

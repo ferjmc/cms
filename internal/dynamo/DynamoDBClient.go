@@ -2,6 +2,7 @@ package dynamo
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"sync"
 
@@ -13,10 +14,12 @@ var once sync.Once
 var svc *dynamodb.DynamoDB
 
 func initializeSingletons() {
-	sess := session.Must(session.NewSessionWithOptions(session.Options{
+	sess, err := session.NewSessionWithOptions(session.Options{
 		SharedConfigState: session.SharedConfigEnable,
-	}))
-
+	})
+	if err != nil {
+		log.Fatalf("ERROR: %s", err)
+	}
 	svc = dynamodb.New(sess)
 }
 
@@ -37,5 +40,5 @@ var FavoriteArticleTableName = makeTableName("favorite-article")
 var CommentTableName = makeTableName("comment")
 
 func makeTableName(suffix string) string {
-	return fmt.Sprintf("realworld-%s-%s", Stage, suffix)
+	return fmt.Sprintf("cms-%s-%s", Stage, suffix)
 }

@@ -173,13 +173,18 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/cms/dev/1629483420533-2021-08-20T18:17:00.533Z/cms.zip"
+          "S3Key": "serverless/cms/dev/1629505393660-2021-08-21T00:23:13.660Z/cms.zip"
         },
         "Handler": "bin/users-post",
         "Runtime": "go1.x",
         "FunctionName": "cms-dev-users-post",
         "MemorySize": 1024,
         "Timeout": 6,
+        "Environment": {
+          "Variables": {
+            "STAGE": "dev"
+          }
+        },
         "Role": {
           "Fn::GetAtt": [
             "IamRoleLambdaExecution",
@@ -191,14 +196,14 @@
         "UsersDashpostLogGroup"
       ]
     },
-    "UsersDashpostLambdaVersionE17nJsOwbLR1CFcDwGR5HBE5tgeLp7FE6UzK4sh2TrI": {
+    "UsersDashpostLambdaVersionVQnG5o7urD6Aqqb9V34yx0FwTLBhA4XpPFVi8dyl9k": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "UsersDashpostLambdaFunction"
         },
-        "CodeSha256": "+WqcP0IRB6TRRwKh1ITW6ZADPe/WugANWFp0s4joJrs="
+        "CodeSha256": "sws1aRhQjjmmKP7Un6mTBWq1U5FLEzj1HROMxMziO3Y="
       }
     },
     "ApiGatewayRestApi": {
@@ -319,7 +324,7 @@
         "UsersDashpostLambdaPermissionApiGateway"
       ]
     },
-    "ApiGatewayDeployment1629483419531": {
+    "ApiGatewayDeployment1629505392010": {
       "Type": "AWS::ApiGateway::Deployment",
       "Properties": {
         "RestApiId": {
@@ -391,6 +396,29 @@
           "WriteCapacityUnits": 2
         }
       }
+    },
+    "EmailUserTable": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "TableName": "cms-dev-email-user",
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "Email",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "Email",
+            "KeyType": "HASH"
+          }
+        ],
+        "BillingMode": "PROVISIONED",
+        "ProvisionedThroughput": {
+          "ReadCapacityUnits": 2,
+          "WriteCapacityUnits": 2
+        }
+      }
     }
   },
   "Outputs": {
@@ -405,7 +433,7 @@
     "UsersDashpostLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "UsersDashpostLambdaVersionE17nJsOwbLR1CFcDwGR5HBE5tgeLp7FE6UzK4sh2TrI"
+        "Ref": "UsersDashpostLambdaVersionVQnG5o7urD6Aqqb9V34yx0FwTLBhA4XpPFVi8dyl9k"
       },
       "Export": {
         "Name": "sls-cms-dev-UsersDashpostLambdaFunctionQualifiedArn"

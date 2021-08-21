@@ -34,6 +34,7 @@ type UserResponse struct {
 }
 
 func Handle(input events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+
 	request := Request{}
 	err := json.Unmarshal([]byte(input.Body), &request)
 	if err != nil {

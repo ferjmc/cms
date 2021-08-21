@@ -1,6 +1,8 @@
 package user
 
 import (
+	"log"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
@@ -49,6 +51,7 @@ func (d *dynamoRepository) PutUser(user entities.User) error {
 
 	_, err = dynamo.DynamoDB().TransactWriteItems(&transaction)
 	if err != nil {
+		log.Printf("ERROR: during transaction %s", err)
 		// TODO: distinguish:
 		// NewInputError("username", "has already been taken")
 		// NewInputError("email", "has already been taken")
