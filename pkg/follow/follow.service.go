@@ -7,6 +7,7 @@ type FollowService interface {
 	// with a flag in true for each publisher if the user is following his posts
 	IsFollowing(follower *entities.User, publishers []string) ([]bool, error)
 	Follow(follower, publisher string) error
+	Unfollow(follower, publisher string) error
 }
 
 func NewFollowService(r FollowRepository) FollowService {
@@ -52,4 +53,12 @@ func (s *followService) Follow(follower, publisher string) error {
 		Publisher: publisher,
 	}
 	return s.repository.Follow(follow)
+}
+
+func (s *followService) Unfollow(follower, publisher string) error {
+	follow := entities.Follow{
+		Follower:  follower,
+		Publisher: publisher,
+	}
+	return s.repository.Unfollow(follow)
 }

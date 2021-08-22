@@ -76,3 +76,19 @@ func (d *dynamoRepository) Follow(follow entities.Follow) error {
 
 	return err
 }
+
+func (d *dynamoRepository) Unfollow(follow entities.Follow) error {
+	item, err := dynamodbattribute.MarshalMap(follow)
+	if err != nil {
+		return err
+	}
+
+	deleteFollow := dynamodb.DeleteItemInput{
+		TableName: aws.String(dynamo.FollowTableName),
+		Key:       item,
+	}
+
+	_, err = dynamo.DynamoDB().DeleteItem(&deleteFollow)
+
+	return err
+}
