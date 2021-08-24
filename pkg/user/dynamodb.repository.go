@@ -146,3 +146,51 @@ func (d *dynamoRepository) UpdateUser(oldUser, newUser entities.User) error {
 
 	return nil
 }
+
+func (d *dynamoRepository) GetUserListByUsername(usernames []string) ([]entities.User, error) {
+	usernameSet := make(map[string]bool)
+	for _, username := range usernames {
+		usernameSet[username] = true
+	}
+
+	keys := make([]dynamo.AWSObject, 0, len(usernameSet))
+	for username := range usernameSet {
+		keys = append(keys, dynamo.StringKey("Username", username))
+	}
+
+	batchGetUsers := dynamodb.BatchGetItemInput{
+		RequestItems: map[string]*dynamodb.KeysAndAttributes{
+			dynamo.UserTableName: {
+				Keys: keys,
+			},
+		},
+	}
+
+	responses, err := dynamo.BatchGetItems(&batchGetUsers, len(usernames))
+	if err != nil {
+		return nil, err
+	}
+
+	usersByUsername := make(map[string]entities.User)
+
+	for _, response := range responses {
+		for _, items := range response {
+			for _, item := range items {
+				user := entities.User{}
+				err = dynamodbattribute.UnmarshalMap(item, &user)
+				if err != nil {
+					return nil, err
+				}
+
+				usersByUsername[user.Username] = user
+			}
+		}
+	}
+
+	users := make([]entities.User, 0, len(usernames))
+	for _, username := range usernames {
+		users = append(users, usersByUsername[username])
+	}
+
+	return users, nil
+}

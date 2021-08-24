@@ -266,3 +266,59 @@ func (d *dynamoRepository) GetArticlesByArticleIds(articleIds []int64, limit int
 
 	return articles, nil
 }
+
+func (d *dynamoRepository) IsArticleFavoritedByUser(user *entities.User, articles []entities.Article) ([]bool, error) {
+	if user == nil || len(articles) == 0 {
+		return make([]bool, len(articles)), nil
+	}
+
+	keys := make([]dynamo.AWSObject, 0, len(articles))
+	for _, article := range articles {
+		keys = append(keys, dynamo.AWSObject{
+			"Username":  dynamo.StringValue(user.Username),
+			"ArticleId": dynamo.Int64Value(article.ArticleId),
+		})
+	}
+
+	batchGetFavoriteArticles := dynamodb.BatchGetItemInput{
+		RequestItems: map[string]*dynamodb.KeysAndAttributes{
+			dynamo.FavoriteArticleTableName: {
+				Keys:                 keys,
+				ProjectionExpression: aws.String("ArticleId"),
+			},
+		},
+	}
+
+	responses, err := dynamo.BatchGetItems(&batchGetFavoriteArticles, len(articles))
+	if err != nil {
+		return nil, err
+	}
+
+	isFavorited := make([]bool, len(articles))
+	articleIdToIndex := reverseIndexArticleIds(articles)
+
+	for _, response := range responses {
+		for _, items := range response {
+			for _, item := range items {
+				favoriteArticle := entities.FavoriteArticle{}
+				err = dynamodbattribute.UnmarshalMap(item, &favoriteArticle)
+				if err != nil {
+					return nil, err
+				}
+
+				index := articleIdToIndex[favoriteArticle.ArticleId]
+				isFavorited[index] = true
+			}
+		}
+	}
+
+	return isFavorited, nil
+}
+
+func reverseIndexArticleIds(articles []entities.Article) map[int64]int {
+	indices := make(map[int64]int)
+	for i, article := range articles {
+		indices[article.ArticleId] = i
+	}
+	return indices
+}

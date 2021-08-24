@@ -21,6 +21,9 @@ func (m *mockUserRepository) UsernameByEmail(email string) (string, error) {
 func (m *mockUserRepository) UpdateUser(oldUser, newUser entities.User) error {
 	return nil
 }
+func (m *mockUserRepository) GetUserListByUsername(usernames []string) ([]entities.User, error) {
+	return nil, nil
+}
 
 func NewMockUserRepository() UserRepository {
 	return &mockUserRepository{}

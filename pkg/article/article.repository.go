@@ -16,6 +16,7 @@ type ArticleRepository interface {
 	GetArticlesByAuthor(author string, offset, limit int) ([]entities.Article, error)
 	GetArticlesByTag(tag string, offset, limit int) ([]entities.Article, error)
 	GetFavoriteArticlesByUsername(username string, offset, limit int) ([]entities.Article, error)
+	IsArticleFavoritedByUser(user *entities.User, articles []entities.Article) ([]bool, error)
 }
 
 func NewArticleRepository(instance int) (ArticleRepository, error) {

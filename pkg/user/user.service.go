@@ -8,12 +8,13 @@ import (
 type UserService interface {
 	// PutUser creates a new user from basic struct and a password string
 	PutUser(user entities.User, password string) error
-	// GetUserBuUsername retrieves a user object from a username string
+	// GetUserByUsername retrieves a user object from a username string
 	GetUserByUsername(username string) (*entities.User, error)
 	GetUsernameByEmail(email string) (string, error)
 	GetUserByEmail(email string) (*entities.User, error)
 	GetCurrentUser(authorization string) (*entities.User, string, error)
 	UpdateUser(authorization string, newUser entities.User) (*entities.User, string, error)
+	GetUserListByUsername(usernames []string) ([]entities.User, error)
 }
 
 func NewUserService(r UserRepository) UserService {
@@ -116,4 +117,12 @@ func (s *userService) UpdateUser(authorization string, newUser entities.User) (*
 	}
 
 	return &newUser, token, nil
+}
+
+func (s *userService) GetUserListByUsername(usernames []string) ([]entities.User, error) {
+	if len(usernames) == 0 {
+		return make([]entities.User, 0), nil
+	}
+
+	return s.repository.GetUserListByUsername(usernames)
 }

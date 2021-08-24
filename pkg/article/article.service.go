@@ -5,15 +5,21 @@ import (
 	"fmt"
 
 	"github.com/ferjmc/cms/entities"
+	"github.com/ferjmc/cms/pkg/follow"
+	"github.com/ferjmc/cms/pkg/user"
 )
 
 type ArticleService interface {
 	PutArticle(article *entities.Article) error
+	GetArticles(offset, limit int, author, tag, favorited string) ([]entities.Article, error)
+	GetArticleRelatedProperties(user *entities.User, articles []entities.Article, getFollowing bool) ([]bool, []entities.User, []bool, error)
 }
 
-func NewArticleService(r ArticleRepository) ArticleService {
+func NewArticleService(r ArticleRepository, u user.UserService, f follow.FollowService) ArticleService {
 	return &articleService{
 		repository: r,
+		users:      u,
+		follows:    f,
 	}
 }
 
@@ -30,15 +36,19 @@ func New(opts ...func(ArticleService) ArticleService) ArticleService {
 }
 
 func WithDynamoDB(serv ArticleService) ArticleService {
+	user := user.New(user.WithDynamoDB)
+	follow := follow.New(follow.WithDynamoDB)
 	repo, err := NewArticleRepository(InstanceDynamodb)
 	if err != nil {
 		return serv
 	}
-	return NewArticleService(repo)
+	return NewArticleService(repo, user, follow)
 }
 
 type articleService struct {
 	repository ArticleRepository
+	users      user.UserService
+	follows    follow.FollowService
 }
 
 func (s *articleService) PutArticle(article *entities.Article) error {
@@ -100,4 +110,32 @@ func getNumFilters(author, tag, favorited string) int {
 		numFilters++
 	}
 	return numFilters
+}
+
+func (s *articleService) GetArticleRelatedProperties(user *entities.User, articles []entities.Article, getFollowing bool) ([]bool, []entities.User, []bool, error) {
+	isFavorited, err := s.repository.IsArticleFavoritedByUser(user, articles)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	authorUsernames := make([]string, 0, len(articles))
+	for _, article := range articles {
+		authorUsernames = append(authorUsernames, article.Author)
+	}
+
+	authors, err := s.users.GetUserListByUsername(authorUsernames)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	following := make([]bool, 0)
+
+	if getFollowing {
+		following, err = s.follows.IsFollowing(user, authorUsernames)
+		if err != nil {
+			return nil, nil, nil, err
+		}
+	}
+
+	return isFavorited, authors, following, nil
 }
