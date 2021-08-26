@@ -322,3 +322,41 @@ func reverseIndexArticleIds(articles []entities.Article) map[int64]int {
 	}
 	return indices
 }
+
+func (d *dynamoRepository) GetFeed(username string, offset, limit int) ([]entities.Article, error) {
+	queryPublishers := dynamodb.QueryInput{
+		TableName:                 aws.String(dynamo.FollowTableName),
+		KeyConditionExpression:    aws.String("Follower=:username"),
+		ExpressionAttributeValues: dynamo.StringKey(":username", username),
+		ProjectionExpression:      aws.String("Publisher"),
+	}
+
+	const queryInitialCapacity = 16
+	items, err := dynamo.QueryItems(&queryPublishers, 0, queryInitialCapacity)
+	if err != nil {
+		return nil, err
+	}
+
+	follows := make([]entities.Follow, 0, len(items))
+	err = dynamodbattribute.UnmarshalListOfMaps(items, &follows)
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO: DynamoDB doesn't support batch queries
+	// https://stackoverflow.com/questions/24953783/dynamodb-batch-execute-queryrequests
+	// Concurrent queries can probably improve the performance of the following operations.
+
+	articlesByAuthor := make(entities.ArticlePriorityQueue, 0, len(follows))
+
+	for _, follow := range follows {
+		articles, err := d.GetArticlesByAuthor(follow.Publisher, 0, limit)
+		if err != nil {
+			return nil, err
+		}
+
+		articlesByAuthor = append(articlesByAuthor, articles)
+	}
+
+	return entities.MergeArticles(articlesByAuthor, offset, limit), nil
+}

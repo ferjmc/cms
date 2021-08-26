@@ -13,6 +13,7 @@ type ArticleService interface {
 	PutArticle(article *entities.Article) error
 	GetArticles(offset, limit int, author, tag, favorited string) ([]entities.Article, error)
 	GetArticleRelatedProperties(user *entities.User, articles []entities.Article, getFollowing bool) ([]bool, []entities.User, []bool, error)
+	GetFeed(username string, offset, limit int) ([]entities.Article, error)
 }
 
 func NewArticleService(r ArticleRepository, u user.UserService, f follow.FollowService) ArticleService {
@@ -138,4 +139,8 @@ func (s *articleService) GetArticleRelatedProperties(user *entities.User, articl
 	}
 
 	return isFavorited, authors, following, nil
+}
+
+func (s *articleService) GetFeed(username string, offset, limit int) ([]entities.Article, error) {
+	return s.repository.GetFeed(username, offset, limit)
 }
